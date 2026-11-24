@@ -22,12 +22,16 @@ interface Props {
   variant?: "row" | "column";
   // Hide the caption when the surrounding text already names the diagram.
   caption?: boolean;
+  // Steps become buttons; selecting one shows what it does under the flow.
+  interactive?: boolean;
 }
 
-const { diagram, variant = "row", caption = true } = Astro.props;
+const { diagram, variant = "row", caption = true, interactive = false } = Astro.props;
+// A step is a button when the diagram is interactive, otherwise plain text.
+const Node = interactive ? "button" : "div";
 ---
 
-<figure class:list={["diagram", variant]}>
+<figure class:list={["diagram", variant, { interactive }]} data-diagram={interactive ? "" : undefined}>
   <figcaption class:list={[{ "visually-hidden": !caption }]}>
     <span class="cap-title">{diagram.title}</span>
     <span class="cap-desc">{diagram.description}</span>
@@ -38,7 +42,12 @@ const { diagram, variant = "row", caption = true } = Astro.props;
         diagram.steps.map((step, i) => (
           <li>
             {i > 0 && <span class="conn" aria-hidden="true" />}
-            <div class:list={["node", step.kind]}>
+            <Node
+              class:list={["node", step.kind]}
+              type={interactive ? "button" : undefined}
+              aria-pressed={interactive ? "false" : undefined}
+              data-step={interactive ? step.label : undefined}
+            >
               <span class="label">
                 {step.kind === "gate" && <span class="diamond" aria-hidden="true" />}
                 {step.kind === "model" && <span class="dot" aria-hidden="true" />}
@@ -47,11 +56,11 @@ const { diagram, variant = "row", caption = true } = Astro.props;
                 {step.kind === "model" && <span class="visually-hidden"> (model)</span>}
               </span>
               {step.branches && (
-                <ul class="branches">
+                <span class="branches">
                   {step.branches.map((b) => (
-                    <li>{b}</li>
+                    <span>{b}</span>
                   ))}
-                </ul>
+                </span>
               )}
               {step.note && <span class="note">{step.note}</span>}
               {step.loop && (
@@ -63,11 +72,18 @@ const { diagram, variant = "row", caption = true } = Astro.props;
                   {step.loop}
                 </span>
               )}
-            </div>
+            </Node>
           </li>
         ))
       }
     </ol>
+    {
+      interactive && (
+        <p class="detail" data-detail aria-live="polite">
+          <span class="detail-hint">Select a step to see what it does</span>
+        </p>
+      )
+    }
     {
       diagram.stores.length > 0 && (
         <dl class="stores">
@@ -82,6 +98,31 @@ const { diagram, variant = "row", caption = true } = Astro.props;
     }
   </div>
 </figure>
+
+<script>
+  // Interactive diagrams: selecting a step shows its note under the flow.
+  document.querySelectorAll<HTMLElement>("[data-diagram]").forEach((figure) => {
+    const detail = figure.querySelector<HTMLElement>("[data-detail]");
+    const steps = [...figure.querySelectorAll<HTMLButtonElement>("button[data-step]")];
+    if (!detail) return;
+
+    steps.forEach((step) =>
+      step.addEventListener("click", () => {
+        steps.forEach((s) => s.setAttribute("aria-pressed", String(s === step)));
+        const note = step.querySelector(".note")?.textContent?.trim();
+        const loop = step.querySelector(".loop")?.textContent?.trim();
+        const branches = [...step.querySelectorAll(".branches span")].map((b) => b.textContent);
+
+        const name = document.createElement("strong");
+        name.textContent = step.dataset.step ?? "";
+        const text = [note, branches.length ? `Runs as: ${branches.join(", ")}.` : "", loop ? `${loop}.` : ""]
+          .filter(Boolean)
+          .join(" ");
+        detail.replaceChildren(name, document.createTextNode(text ? ` ${text}` : ""));
+      }),
+    );
+  });
+</script>
 
 <style>
   .diagram {
@@ -138,6 +179,51 @@ const { diagram, variant = "row", caption = true } = Astro.props;
     color: var(--text);
   }
 
+  /* Interactive steps are real buttons */
+  button.node {
+    min-height: 2.75rem;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color var(--fast) var(--ease), box-shadow var(--fast) var(--ease),
+      transform var(--fast) var(--ease);
+  }
+
+  button.node:hover {
+    box-shadow: 0 0 0 1px var(--k, var(--line-strong));
+  }
+
+  button.node.gate:hover {
+    box-shadow: inset 3px 0 0 var(--k), 0 0 0 1px var(--k);
+  }
+
+  button.node:active {
+    transform: scale(0.98);
+  }
+
+  button.node[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--k, var(--text)) 30%, var(--bg));
+    box-shadow: 0 0 0 2px var(--k, var(--line-strong));
+  }
+
+  .detail {
+    min-height: 3.2em;
+    margin-top: var(--s-5);
+    font-size: var(--step-small);
+    line-height: 1.5;
+    color: var(--text-2);
+    max-width: var(--measure);
+  }
+
+  .detail strong {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .detail-hint {
+    color: var(--muted);
+  }
+
   /* One colour per kind. --k is the kind's colour. */
   .node.io {
     --k: var(--amber);
@@ -187,7 +273,7 @@ const { diagram, variant = "row", caption = true } = Astro.props;
     gap: var(--s-1);
   }
 
-  .branches li {
+  .branches span {
     padding: var(--s-1) var(--s-2);
     border: 1px solid var(--line);
     border-radius: var(--r-sm);

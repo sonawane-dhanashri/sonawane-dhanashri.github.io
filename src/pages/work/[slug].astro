@@ -13,8 +13,14 @@ export async function getStaticPaths() {
 }
 
 const { entry, next } = Astro.props;
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
 const d = entry.data;
+
+// The fixed section menu: the diagram, then each h2 in the write-up.
+const sections = [
+  { href: "#architecture", label: "Diagram" },
+  ...headings.filter((h) => h.depth === 2).map((h) => ({ href: `#${h.slug}`, label: h.text })),
+];
 
 const jsonLd = [
   {
@@ -59,8 +65,14 @@ const jsonLd = [
       </dl>
     </header>
 
+    <nav class="onpage" aria-label="On this page">
+      <ul class="wrap">
+        {sections.map((s) => <li><a href={s.href}>{s.label}</a></li>)}
+      </ul>
+    </nav>
+
     <div class="wrap body">
-      <section class="diagrams" aria-label="Architecture">
+      <section id="architecture" class="diagrams" aria-label="Architecture">
         {d.diagrams.map((diagram) => <Diagram diagram={diagram} variant="column" />)}
       </section>
       <div class="prose">
@@ -75,11 +87,86 @@ const jsonLd = [
   </article>
 </BaseLayout>
 
+<script>
+  // Mark the section being read in the fixed section menu.
+  const links = [...document.querySelectorAll<HTMLAnchorElement>(".onpage a")];
+  const targets = links
+    .map((a) => document.getElementById(decodeURIComponent(a.hash.slice(1))))
+    .filter((el): el is HTMLElement => el !== null);
+
+  function mark() {
+    const line = 150;
+    let current = targets[0];
+    for (const t of targets) if (t.getBoundingClientRect().top <= line) current = t;
+    // On wide screens the diagram sits beside the text, so the text wins once it starts.
+    links.forEach((a) => {
+      if (current && a.hash === `#${current.id}`) a.setAttribute("aria-current", "true");
+      else a.removeAttribute("aria-current");
+    });
+  }
+
+  if (targets.length) {
+    mark();
+    addEventListener("scroll", mark, { passive: true });
+  }
+</script>
+
 <style>
+  /* Fixed section menu, under the site header */
+  .onpage {
+    position: sticky;
+    top: 3.5rem;
+    z-index: 5;
+    background: var(--bg);
+    border-block: 1px solid var(--line);
+  }
+
+  .onpage ul {
+    display: flex;
+    gap: var(--s-6);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .onpage ul::-webkit-scrollbar {
+    display: none;
+  }
+
+  .onpage a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-size: var(--step-small);
+    color: var(--text-2);
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: inset 0 -2px 0 transparent;
+    transition: color var(--fast) var(--ease), box-shadow var(--fast) var(--ease);
+  }
+
+  .onpage a:hover {
+    color: var(--text);
+  }
+
+  .onpage a[aria-current="true"] {
+    color: var(--text);
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+
+  .body {
+    padding-top: var(--s-10);
+  }
+
+  .diagrams,
+  .prose :global(h2) {
+    /* Adds to the page's scroll-padding so headings clear both sticky bars. */
+    scroll-margin-top: 2.5rem;
+  }
+
   .head {
     display: grid;
     gap: var(--s-5);
-    padding-block: var(--s-12) var(--s-10);
+    padding-block: var(--s-12) var(--s-8);
   }
 
   .head h1 {
