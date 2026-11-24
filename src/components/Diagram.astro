@@ -1,0 +1,352 @@
+---
+// One diagram language for every project: boxed steps joined by arrows, on a
+// dot grid. Guardrail and validation steps ("gates") carry the accent and a
+// diamond. The diagram is a real ordered list, so it reads without CSS and to
+// screen readers.
+interface Step {
+  label: string;
+  note?: string;
+  kind: "step" | "gate" | "io" | "model";
+  branches?: string[];
+  loop?: string;
+}
+
+interface Props {
+  diagram: {
+    title: string;
+    description: string;
+    steps: Step[];
+    stores: { name: string; role: string }[];
+  };
+  // "row": compact, labels only (home page). "column": with notes (case study).
+  variant?: "row" | "column";
+  // Hide the caption when the surrounding text already names the diagram.
+  caption?: boolean;
+}
+
+const { diagram, variant = "row", caption = true } = Astro.props;
+---
+
+<figure class:list={["diagram", variant]}>
+  <figcaption class:list={[{ "visually-hidden": !caption }]}>
+    <span class="cap-title">{diagram.title}</span>
+    <span class="cap-desc">{diagram.description}</span>
+  </figcaption>
+  <div class="panel">
+    <ol>
+      {
+        diagram.steps.map((step, i) => (
+          <li>
+            {i > 0 && <span class="conn" aria-hidden="true" />}
+            <div class:list={["node", step.kind]}>
+              <span class="label">
+                {step.kind === "gate" && <span class="diamond" aria-hidden="true" />}
+                {step.kind === "model" && <span class="dot" aria-hidden="true" />}
+                {step.label}
+                {step.kind === "gate" && <span class="visually-hidden"> (check)</span>}
+                {step.kind === "model" && <span class="visually-hidden"> (model)</span>}
+              </span>
+              {step.branches && (
+                <ul class="branches">
+                  {step.branches.map((b) => (
+                    <li>{b}</li>
+                  ))}
+                </ul>
+              )}
+              {step.note && <span class="note">{step.note}</span>}
+              {step.loop && (
+                <span class="loop">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                  </svg>
+                  {step.loop}
+                </span>
+              )}
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+    {
+      diagram.stores.length > 0 && (
+        <dl class="stores">
+          {diagram.stores.map((s) => (
+            <div>
+              <dt>{s.name}</dt>
+              <dd>{s.role}</dd>
+            </div>
+          ))}
+        </dl>
+      )
+    }
+  </div>
+</figure>
+
+<style>
+  .diagram {
+    display: grid;
+    gap: var(--s-3);
+    min-width: 0;
+  }
+
+  figcaption {
+    display: grid;
+    gap: var(--s-1);
+    max-width: var(--measure);
+  }
+
+  .cap-title {
+    font-weight: 500;
+  }
+
+  .cap-desc {
+    font-size: var(--step-small);
+    color: var(--text-2);
+  }
+
+  .panel {
+    min-width: 0;
+    padding: var(--s-5);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    background-color: var(--surface);
+    background-image: radial-gradient(var(--dot) 1px, transparent 1.5px);
+    background-size: 16px 16px;
+    background-position: 8px 8px;
+  }
+
+  ol {
+    display: flex;
+    font-family: var(--font-mono);
+    font-size: var(--step-meta);
+    line-height: 1.35;
+  }
+
+  ol > li {
+    display: flex;
+  }
+
+  .node {
+    display: grid;
+    gap: var(--s-2);
+    align-content: center;
+    padding: var(--s-3) var(--s-4);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-md);
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  /* One colour per kind. --k is the kind's colour. */
+  .node.io {
+    --k: var(--amber);
+    border-style: dashed;
+  }
+
+  .node.gate {
+    --k: var(--accent);
+    box-shadow: inset 3px 0 0 var(--k);
+  }
+
+  .node.model {
+    --k: var(--teal);
+  }
+
+  .node.io,
+  .node.gate,
+  .node.model {
+    border-color: var(--k);
+    background: color-mix(in srgb, var(--k) var(--tint), var(--bg));
+  }
+
+  .dot {
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--teal);
+  }
+
+  .label {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+
+  .diamond {
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    background: var(--accent);
+    transform: rotate(45deg);
+  }
+
+  .branches {
+    display: grid;
+    gap: var(--s-1);
+  }
+
+  .branches li {
+    padding: var(--s-1) var(--s-2);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    background: var(--surface);
+    color: var(--text-2);
+  }
+
+  .note,
+  .loop {
+    font-family: var(--font-body);
+    font-size: var(--step-small);
+    line-height: 1.5;
+    color: var(--text-2);
+  }
+
+  .loop {
+    display: flex;
+    gap: var(--s-2);
+    color: var(--text);
+  }
+
+  .loop svg {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    margin-top: 0.2rem;
+    color: var(--accent);
+  }
+
+  /* Connector: a line with an arrowhead */
+  .conn {
+    position: relative;
+    flex: none;
+    background: var(--line-strong);
+  }
+
+  .conn::after {
+    content: "";
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-right: 1px solid var(--muted);
+    border-bottom: 1px solid var(--muted);
+  }
+
+  /* Row variant: one line on wide screens. On narrow screens it wraps, and
+     each arrow travels with the step it points to. */
+  .row ol {
+    flex-wrap: wrap;
+    gap: var(--s-3) 0;
+  }
+
+  .row ol > li {
+    align-items: center;
+  }
+
+  .row .note,
+  .row .loop {
+    display: none;
+  }
+
+  .row .conn {
+    width: 1.25rem;
+    height: 1px;
+    margin-inline: var(--s-1);
+  }
+
+  .row .stores {
+    display: none;
+  }
+
+  @media (min-width: 48rem) {
+    .row .stores {
+      display: flex;
+    }
+  }
+
+  @media (min-width: 75rem) {
+    .row ol {
+      flex-wrap: nowrap;
+    }
+
+    .row .node {
+      padding-inline: var(--s-3);
+    }
+
+    .row .conn {
+      width: 0.75rem;
+    }
+  }
+
+  .row .conn::after {
+    right: 0;
+    top: -3px;
+    transform: rotate(-45deg);
+  }
+
+  /* Column variant: full steps with notes */
+  .column ol {
+    flex-direction: column;
+    max-width: 36rem;
+  }
+
+  .column ol > li {
+    flex-direction: column;
+  }
+
+  .column .node {
+    padding: var(--s-4);
+  }
+
+  .column .label {
+    font-size: var(--step-small);
+  }
+
+  .column .branches {
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  }
+
+  .column .conn {
+    width: 1px;
+    height: 1.5rem;
+    margin: var(--s-1) 0 var(--s-2) var(--s-8);
+  }
+
+  .column .conn::after {
+    left: -3px;
+    bottom: 0;
+    transform: rotate(45deg);
+  }
+
+  /* Stores and transports beside the flow */
+  .stores {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-6);
+    margin: var(--s-5) 0 0;
+    padding-top: var(--s-4);
+    border-top: 1px dashed var(--line-strong);
+    font-size: var(--step-meta);
+  }
+
+  .stores div {
+    display: flex;
+    gap: var(--s-2);
+  }
+
+  .stores dt {
+    font-family: var(--font-mono);
+    color: var(--text);
+  }
+
+  .stores dd {
+    color: var(--text-2);
+  }
+
+  @media (min-width: 48rem) {
+    .panel {
+      padding: var(--s-8);
+    }
+  }
+</style>

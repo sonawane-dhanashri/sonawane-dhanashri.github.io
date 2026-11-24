@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.astro/
+.env
+.env.*
+
+# Private working notes. Never publish these.
+CLAUDE.md
+CLAUDE.artist.md
+CLAUDE.local.md
+.claude/

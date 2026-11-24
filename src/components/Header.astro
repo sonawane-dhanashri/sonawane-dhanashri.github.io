@@ -1,0 +1,254 @@
+---
+import { SITE } from "../data/site";
+
+const links = [
+  { href: "/#work", label: "Work" },
+  { href: "/#approach", label: "Approach" },
+  { href: "/#skills", label: "Skills" },
+  { href: "/#experience", label: "Experience" },
+  { href: "/#contact", label: "Contact" },
+];
+---
+
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="name" href="/"><span class="mark" aria-hidden="true"></span>{SITE.name}</a>
+    <nav aria-label="Main">
+      <ul class="links">
+        {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+      </ul>
+    </nav>
+    <div class="tools">
+      <a class="resume" href={SITE.resume} download>Resume</a>
+      <details class="menu">
+        <summary aria-label="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16"></path>
+          </svg>
+        </summary>
+        <ul class="menu-list">
+          {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+        </ul>
+      </details>
+      <button class="theme" type="button" aria-label="Switch colour theme" data-theme-toggle>
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+        </svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<script is:inline>
+  document.querySelector("[data-theme-toggle]")?.addEventListener("click", () => {
+    const root = document.documentElement;
+    const next = root.dataset.theme === "light" ? "dark" : "light";
+    if (next === "light") root.dataset.theme = "light";
+    else delete root.dataset.theme;
+    try {
+      localStorage.setItem("theme", next);
+    } catch {}
+  });
+
+  // Close the small-screen menu after a link is chosen or on Escape.
+  const menu = document.querySelector("details.menu");
+  menu?.addEventListener("click", (e) => {
+    if (e.target.closest("a")) menu.open = false;
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && menu?.open) menu.open = false;
+  });
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: 3.5rem;
+  }
+
+  .name {
+    font-weight: 600;
+    font-stretch: 84%;
+    font-size: 1rem;
+    text-decoration: none;
+    white-space: nowrap;
+    flex: none;
+    margin-right: auto;
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .mark {
+    flex: none;
+    width: 0.625rem;
+    height: 0.625rem;
+    margin-right: var(--s-3);
+    border: 2px solid var(--accent);
+    transform: rotate(45deg);
+  }
+
+  .links {
+    display: none;
+    gap: var(--s-6);
+    font-size: var(--step-small);
+  }
+
+  .links a {
+    color: var(--text-2);
+    text-decoration: none;
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .links a:hover {
+    color: var(--text);
+  }
+
+  .tools {
+    display: flex;
+    align-items: center;
+    gap: var(--s-1);
+  }
+
+  .menu summary {
+    display: inline-grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--r-md);
+    color: var(--text-2);
+    cursor: pointer;
+    list-style: none;
+    transition: background-color var(--fast) var(--ease), color var(--fast) var(--ease);
+  }
+
+  .menu summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .menu summary:hover,
+  .menu[open] summary {
+    background: var(--raised);
+    color: var(--text);
+  }
+
+  .menu summary svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .menu-list {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    display: grid;
+    padding: var(--s-2) var(--gutter) var(--s-4);
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .menu-list a {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+    text-decoration: none;
+  }
+
+  .menu-list li + li {
+    border-top: 1px solid var(--line);
+  }
+
+  .resume {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25rem;
+    padding: 0 var(--s-3);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-md);
+    font-size: var(--step-small);
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color var(--fast) var(--ease);
+  }
+
+  .resume:hover {
+    background: var(--raised);
+  }
+
+  .theme {
+    display: inline-grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 0;
+    border-radius: var(--r-md);
+    background: transparent;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: background-color var(--fast) var(--ease), color var(--fast) var(--ease);
+  }
+
+  .theme:hover {
+    background: var(--raised);
+    color: var(--text);
+  }
+
+  .theme svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    grid-area: 1 / 1;
+  }
+
+  /* Show the icon for the theme you would switch to. Dark is the default. */
+  .sun {
+    display: block;
+  }
+  .moon {
+    display: none;
+  }
+
+  :global(:root[data-theme="light"]) .sun {
+    display: none;
+  }
+  :global(:root[data-theme="light"]) .moon {
+    display: block;
+  }
+
+  @media (min-width: 56rem) {
+    .links {
+      display: flex;
+    }
+    .menu {
+      display: none;
+    }
+    .tools {
+      gap: var(--s-2);
+    }
+    .bar {
+      gap: var(--s-4);
+    }
+    .name {
+      margin-right: var(--s-10);
+    }
+    nav {
+      margin-right: auto;
+    }
+  }
+</style>

@@ -1,0 +1,172 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Diagram from "../../components/Diagram.astro";
+import { SITE } from "../../data/site";
+
+export async function getStaticPaths() {
+  const works = (await getCollection("work")).sort((a, b) => a.data.order - b.data.order);
+  return works.map((entry, i) => ({
+    params: { slug: entry.id },
+    props: { entry, next: works[(i + 1) % works.length] },
+  }));
+}
+
+const { entry, next } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    name: d.title,
+    description: d.description,
+    author: { "@type": "Person", name: SITE.name },
+    keywords: d.stack.join(", "),
+    url: new URL(Astro.url.pathname, Astro.site).href,
+  },
+];
+---
+
+<BaseLayout title={`${d.title} | ${SITE.name}`} description={d.description} jsonLd={jsonLd}>
+  <article>
+    <header class="wrap head">
+      <a class="back" href="/#work">All work</a>
+      <h1>{d.title}</h1>
+      <p class="lead">{d.summary}</p>
+      <dl class="facts">
+        <div>
+          <dt>Context</dt>
+          <dd>{d.context}{d.period && `, ${d.period}`}</dd>
+        </div>
+        <div>
+          <dt>Stack</dt>
+          <dd class="mono">{d.stack.join(", ")}</dd>
+        </div>
+        {
+          (d.repo || d.demo) && (
+            <div>
+              <dt>Links</dt>
+              <dd>
+                {d.repo && <a href={d.repo}>Code</a>}
+                {d.repo && d.demo && ", "}
+                {d.demo && <a href={d.demo}>Demo</a>}
+              </dd>
+            </div>
+          )
+        }
+      </dl>
+    </header>
+
+    <div class="wrap body">
+      <section class="diagrams" aria-label="Architecture">
+        {d.diagrams.map((diagram) => <Diagram diagram={diagram} variant="column" />)}
+      </section>
+      <div class="prose">
+        <Content />
+      </div>
+    </div>
+
+    <nav class="wrap next" aria-label="Next case study">
+      <span class="meta">Next</span>
+      <a href={`/work/${next.id}/`}>{next.data.title}</a>
+    </nav>
+  </article>
+</BaseLayout>
+
+<style>
+  .head {
+    display: grid;
+    gap: var(--s-5);
+    padding-block: var(--s-12) var(--s-10);
+  }
+
+  .head h1 {
+    font-size: clamp(2.25rem, 1.5rem + 3.6vw, 3.75rem);
+    max-width: 18ch;
+  }
+
+  .head .lead {
+    max-width: var(--measure);
+  }
+
+  .back {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-size: var(--step-small);
+    color: var(--text-2);
+  }
+
+  .facts {
+    display: grid;
+    gap: var(--s-3);
+    margin: var(--s-3) 0 0;
+    padding-top: var(--s-5);
+    border-top: 1px solid var(--line);
+    font-size: var(--step-small);
+  }
+
+  .facts div {
+    display: grid;
+    gap: var(--s-1);
+  }
+
+  .facts dt {
+    color: var(--muted);
+  }
+
+  .facts dd {
+    color: var(--text);
+  }
+
+  .body {
+    display: grid;
+    gap: var(--s-12);
+    padding-bottom: var(--s-16);
+  }
+
+  .diagrams {
+    display: grid;
+    gap: var(--s-10);
+    align-content: start;
+  }
+
+  .next {
+    display: grid;
+    gap: var(--s-1);
+    padding-block: var(--s-10);
+    border-top: 1px solid var(--line);
+  }
+
+  .next a {
+    justify-self: start;
+    font-size: var(--step-h3);
+    font-weight: 500;
+    font-stretch: 84%;
+    line-height: 1.2;
+  }
+
+  @media (min-width: 40rem) {
+    .facts div {
+      grid-template-columns: 8rem 1fr;
+      gap: var(--s-4);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .head {
+      padding-block: var(--s-20) var(--s-12);
+    }
+
+    .body {
+      grid-template-columns: minmax(0, 30rem) minmax(0, 1fr);
+      gap: var(--s-16);
+      align-items: start;
+      padding-bottom: var(--s-24);
+    }
+
+  }
+</style>

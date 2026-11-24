@@ -1,0 +1,976 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Diagram from "../components/Diagram.astro";
+import { SITE, EXPERIENCE, EDUCATION, CERTIFICATIONS } from "../data/site";
+
+const record = [
+  { label: "Experience", items: EXPERIENCE },
+  { label: "Education", items: EDUCATION },
+  { label: "Certification", items: CERTIFICATIONS },
+];
+import { SKILLS } from "../data/skills";
+
+const works = (await getCollection("work", ({ data }) => data.featured)).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+
+const principles = [
+  {
+    glyph: "gate",
+    title: "Guardrails fail closed",
+    body: "Every model call goes through input guardrails in one shared client. A request that cannot be cleared is blocked, not passed along.",
+    href: "/work/brand-to-campaign-platform/",
+    project: "Brand-to-campaign generation platform",
+  },
+  {
+    glyph: "loop",
+    title: "Generated output is checked before it is accepted",
+    body: "Images are reviewed by a vision model. Generated code has to render, then a judge model compares the result with the spec.",
+    href: "/work/brand-to-campaign-platform/",
+    project: "Brand-to-campaign generation platform",
+  },
+  {
+    glyph: "tool",
+    title: "Agents reach data only through tools",
+    body: "The voice agent reads customer and order data through backend tool interfaces. It has no direct access to the database.",
+    href: "/work/voice-ai-support-agent/",
+    project: "Voice AI customer support agent",
+  },
+  {
+    glyph: "memory",
+    title: "Each agent has one job and they share memory",
+    body: "Recommendation, tutoring and assessment are separate agents. Shared memory lets one build on what another has learned.",
+    href: "/work/multi-agent-learning-assistant/",
+    project: "Multi-agent learning assistant",
+  },
+];
+
+// Hero schematic: the pattern that runs through all the work.
+const nodes = [
+  { id: "req", y: 8, title: "Request", sub: "a URL, a voice, a message", kind: "io" },
+  { id: "guard", y: 100, title: "Input guardrail", sub: "fails closed", kind: "gate" },
+  { id: "model", y: 192, title: "Model call", sub: "Gemini, Claude, Imagen", kind: "model" },
+  { id: "valid", y: 284, title: "Validation", sub: "render check, judge model", kind: "gate" },
+  { id: "out", y: 376, title: "Output", sub: "only what passed", kind: "io" },
+];
+
+// Three requests a visitor can send through the schematic.
+const runs = [
+  { id: "pass", label: "Passes" },
+  { id: "retry", label: "Needs a retry" },
+  { id: "block", label: "Gets blocked" },
+];
+---
+
+<BaseLayout>
+  <div class="band">
+  <section class="wrap hero">
+    <div class="hero-text">
+      <h1>{SITE.name}</h1>
+      <p class="lead">
+        Software engineer in Pune. I build generative AI products, and the guardrails and checks
+        that make them safe to ship.
+      </p>
+      <div class="actions">
+        <a class="btn btn-primary" href="#work">View work</a>
+        <a class="btn" href={SITE.resume} download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 15V3M7 10l5 5 5-5M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          </svg>
+          Download resume
+        </a>
+      </div>
+      <ul class="reach">
+        <li><a href={`mailto:${SITE.email}`}>{SITE.email}</a></li>
+        <li><a href={SITE.linkedin} rel="me noopener">LinkedIn</a></li>
+        <li><a href={SITE.github} rel="me noopener">GitHub</a></li>
+      </ul>
+    </div>
+
+    <figure class="schematic">
+      <svg viewBox="0 0 400 440" role="img" aria-labelledby="schematic-title schematic-desc">
+        <title id="schematic-title">How I build a generative AI feature</title>
+        <desc id="schematic-desc">
+          A request passes an input guardrail that fails closed, then a model call, then validation.
+          Output that fails validation is retried. Only output that passes is returned.
+        </desc>
+
+        <g class="links-layer">
+          {
+            nodes.slice(0, -1).map((n) => (
+              <g>
+                <line x1="149" y1={n.y + 56} x2="149" y2={n.y + 90} />
+                <path d={`M144 ${n.y + 85} L149 ${n.y + 91} L154 ${n.y + 85}`} />
+              </g>
+            ))
+          }
+          <g class="branch" data-path="blocked">
+            <path d="M274 128 H310" />
+            <path d="M310 121 V135" />
+            <text x="318" y="132">blocked</text>
+          </g>
+          <g class="branch" data-path="retry">
+            <path d="M274 312 H338 V220 H280" />
+            <path d="M285 215 L279 220 L285 225" />
+            <text x="346" y="270">retry</text>
+          </g>
+        </g>
+
+        {
+          nodes.map((n, i) => (
+            <g class:list={["n", n.kind]} data-node={n.id} style={`--i:${i}`}>
+              <rect x="24" y={n.y} width="250" height="56" rx="10" />
+              {n.kind === "gate" && (
+                <rect class="d" x="40" y={n.y + 15} width="8" height="8" transform={`rotate(45 44 ${n.y + 19})`} />
+              )}
+              {n.kind === "model" && <circle class="d" cx="44" cy={n.y + 19} r="4" />}
+              <text class="t" x={n.kind === "gate" || n.kind === "model" ? 60 : 40} y={n.y + 24}>
+                {n.title}
+              </text>
+              <text class="s" x="40" y={n.y + 44}>
+                {n.sub}
+              </text>
+            </g>
+          ))
+        }
+      </svg>
+      <figcaption>
+        <p class="run-status" data-run-status aria-live="polite">
+          The pattern behind every project below
+        </p>
+        <div class="run" role="group" aria-label="Send a request through the schematic">
+          <span class="run-label">Send a request that</span>
+          {
+            runs.map((r) => (
+              <button type="button" class="run-btn" data-run={r.id}>
+                {r.label}
+              </button>
+            ))
+          }
+        </div>
+      </figcaption>
+    </figure>
+  </section>
+  </div>
+
+  <section id="work" class="section rule">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Selected work</h2>
+        <p>Four systems, each drawn as the pipeline it is.</p>
+        <ul class="legend" aria-label="How to read the diagrams">
+          <li><span class="key key-io" aria-hidden="true"></span>Input or output</li>
+          <li><span class="key key-model" aria-hidden="true"></span>Model step</li>
+          <li><span class="key key-gate" aria-hidden="true"></span>Check that can stop or repeat the work</li>
+        </ul>
+      </div>
+
+      <div class="works">
+        {
+          works.map((w) => (
+            <article class="work">
+              <div class="work-head">
+                <div class="work-title">
+                  <h3>
+                    <a href={`/work/${w.id}/`}>{w.data.title}</a>
+                  </h3>
+                  <p>{w.data.summary}</p>
+                </div>
+                <div class="work-meta">
+                  <p class="meta">
+                    {w.data.context}
+                    {w.data.period && `, ${w.data.period}`}
+                  </p>
+                  <ul class="stack" aria-label="Stack">
+                    {w.data.stack.map((s) => (
+                      <li>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <Diagram diagram={w.data.diagrams[0]} variant="row" caption={false} />
+              <a class="more" href={`/work/${w.id}/`}>
+                Read the case study<span class="visually-hidden">: {w.data.title}</span>
+              </a>
+            </article>
+          ))
+        }
+      </div>
+
+      <p class="also">
+        Also at SwayAlgo: a Node.js backend-for-frontend with JWT authentication, protected routes
+        and token refresh, which keeps downstream services stateless.
+      </p>
+    </div>
+  </section>
+
+  <section id="approach" class="section invert">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>How I build</h2>
+        <p>Four habits that show up in the work above.</p>
+      </div>
+      <dl class="principles">
+        {
+          principles.map((p) => (
+            <div>
+              <svg class="glyph" viewBox="0 0 64 36" aria-hidden="true">
+                {p.glyph === "gate" && (
+                  <g>
+                    <path class="g-n" d="M4 18 H22 M42 18 H54" />
+                    <path class="g-a" d="M32 8 L42 18 L32 28 L22 18 Z M54 11 V25" />
+                  </g>
+                )}
+                {p.glyph === "loop" && (
+                  <g>
+                    <rect class="g-t" x="4" y="12" width="18" height="14" rx="3" />
+                    <path class="g-n" d="M22 19 H36" />
+                    <path class="g-a" d="M46 9 L56 19 L46 29 L36 19 Z M46 9 V4 H13 V12 M10 9 L13 12 L16 9" />
+                  </g>
+                )}
+                {p.glyph === "tool" && (
+                  <g>
+                    <circle class="g-t" cx="10" cy="18" r="6" />
+                    <path class="g-n" d="M16 18 H22 M42 18 H46" />
+                    <path class="g-a" d="M32 8 L42 18 L32 28 L22 18 Z" />
+                    <path class="g-m" d="M46 12 V25 a6 2.5 0 0 0 12 0 V12 a6 2.5 0 0 0 -12 0 a6 2.5 0 0 0 12 0" />
+                  </g>
+                )}
+                {p.glyph === "memory" && (
+                  <g>
+                    <path class="g-n" d="M12 13 V24 M32 13 V24 M52 13 V24" />
+                    <circle class="g-t" cx="12" cy="8" r="5" />
+                    <circle class="g-t" cx="32" cy="8" r="5" />
+                    <circle class="g-t" cx="52" cy="8" r="5" />
+                    <rect class="g-m" x="6" y="24" width="52" height="9" rx="3" />
+                  </g>
+                )}
+              </svg>
+              <dt>{p.title}</dt>
+              <dd>
+                <p>{p.body}</p>
+                <a href={p.href}>{p.project}</a>
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <section id="skills" class="section sheet">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Skills</h2>
+      </div>
+      <dl class="skills">
+        {
+          SKILLS.map((g) => (
+            <div>
+              <dt>{g.group}</dt>
+              <dd>{g.items.join(", ")}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <section id="experience" class="section rule">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Experience and education</h2>
+      </div>
+      <div class="record">
+        {
+          record.map((group) => (
+            <section class="group" aria-label={group.label}>
+              <h3 class="group-label">{group.label}</h3>
+              <ol>
+                {group.items.map((e) => (
+                  <li>
+                    <div class="entry-head">
+                      <h4>{e.title}</h4>
+                      {e.period && <span class="when">{e.period}</span>}
+                    </div>
+                    <p class="place">{e.place}</p>
+                    {e.detail && <p class="detail">{e.detail}</p>}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section id="writing" class="section rule">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Writing and open source</h2>
+      </div>
+      <article class="repo">
+        <h3>
+          <a href={`${SITE.github}/python-backend-ai-roadmap`} rel="noopener">python-backend-ai-roadmap</a>
+        </h3>
+        <p>
+          A guide to backend and AI engineering from scratch: Python, DSA, SQL, system design and
+          GenAI, explained step by step with code examples and practice problems.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section id="contact" class="section rule band">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Contact</h2>
+        <p>Email is the fastest way to reach me.</p>
+      </div>
+      <a class="email" href={`mailto:${SITE.email}`}>{SITE.email}</a>
+      <ul class="contact-links">
+        <li><a href={SITE.linkedin} rel="me noopener">LinkedIn</a></li>
+        <li><a href={SITE.github} rel="me noopener">GitHub</a></li>
+        <li><a href={SITE.resume} download>Download resume</a></li>
+      </ul>
+      <p class="outside">
+        Outside work, I paint and make rangoli. Some of it is on
+        <a href={SITE.instagram} rel="noopener">Instagram</a>.
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  // The hero schematic is a small live demo: send a request and watch where
+  // it goes. Each run lights the steps in order.
+  type Step = { node?: string; path?: string; state?: "on" | "fail" };
+
+  const RUNS: Record<string, { steps: Step[]; done: string }> = {
+    pass: {
+      steps: [{ node: "req" }, { node: "guard" }, { node: "model" }, { node: "valid" }, { node: "out" }],
+      done: "Passed the guardrail and validation, so the output is returned",
+    },
+    retry: {
+      steps: [
+        { node: "req" },
+        { node: "guard" },
+        { node: "model" },
+        { node: "valid", state: "fail" },
+        { path: "retry" },
+        { node: "model" },
+        { node: "valid" },
+        { node: "out" },
+      ],
+      done: "Failed validation once, was retried, then passed",
+    },
+    block: {
+      steps: [{ node: "req" }, { node: "guard", state: "fail" }, { path: "blocked" }],
+      done: "Blocked at the guardrail, so nothing reached the model",
+    },
+  };
+
+  const figure = document.querySelector<HTMLElement>(".schematic");
+  const status = figure?.querySelector<HTMLElement>("[data-run-status]");
+  const buttons = figure ? [...figure.querySelectorAll<HTMLButtonElement>("[data-run]")] : [];
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let token = 0;
+
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  function clear() {
+    figure?.querySelectorAll("[data-state]").forEach((el) => el.removeAttribute("data-state"));
+  }
+
+  async function run(id: string) {
+    const spec = RUNS[id];
+    if (!figure || !spec) return;
+    const mine = ++token;
+    clear();
+    buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.run === id)));
+    if (status) status.textContent = "Running";
+    let last: Element | null = null;
+    for (const step of spec.steps) {
+      if (mine !== token) return;
+      if (last && last.getAttribute("data-state") === "on") last.setAttribute("data-state", "done");
+      const el = step.node
+        ? figure.querySelector(`[data-node="${step.node}"]`)
+        : figure.querySelector(`[data-path="${step.path}"]`);
+      el?.setAttribute("data-state", step.state ?? "on");
+      last = el;
+      await wait(reduced ? 0 : 520);
+    }
+    if (mine !== token) return;
+    if (status) status.textContent = spec.done;
+  }
+
+  buttons.forEach((b) => b.addEventListener("click", () => run(b.dataset.run ?? "pass")));
+
+  // Play the retry case once when the page opens, so the schematic explains itself.
+  if (!reduced) setTimeout(() => token === 0 && run("retry"), 900);
+</script>
+
+<style>
+  /* Hero */
+  .hero {
+    display: grid;
+    gap: var(--s-12);
+    padding-block: var(--s-12) var(--s-16);
+  }
+
+  .hero-text {
+    display: grid;
+    gap: var(--s-6);
+    align-content: center;
+  }
+
+  .hero .lead {
+    max-width: 34rem;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+    margin-top: var(--s-2);
+  }
+
+  .reach {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--s-6);
+    font-size: var(--step-small);
+    color: var(--text-2);
+  }
+
+  .reach a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    overflow-wrap: anywhere;
+  }
+
+  .schematic {
+    display: grid;
+    gap: var(--s-3);
+    justify-self: center;
+    width: 100%;
+    max-width: 28rem;
+  }
+
+  .schematic svg {
+    width: 100%;
+    height: auto;
+    padding: var(--s-4);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    background-color: var(--surface);
+    background-image: radial-gradient(var(--dot) 1px, transparent 1.5px);
+    background-size: 16px 16px;
+    background-position: 8px 8px;
+  }
+
+  .schematic figcaption {
+    display: grid;
+    gap: var(--s-3);
+  }
+
+  .run-status {
+    min-height: 2.6em;
+    font-size: var(--step-small);
+    line-height: 1.3;
+    color: var(--text-2);
+  }
+
+  .run {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-2);
+  }
+
+  .run-label {
+    width: 100%;
+    font-size: var(--step-meta);
+    color: var(--muted);
+  }
+
+  .run-btn {
+    min-height: 2.75rem;
+    padding: 0 var(--s-4);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-md);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: var(--step-small);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--fast) var(--ease), border-color var(--fast) var(--ease),
+      transform var(--fast) var(--ease);
+  }
+
+  .run-btn:hover {
+    background: var(--raised);
+  }
+
+  .run-btn:active {
+    transform: scale(0.98);
+  }
+
+  .run-btn[aria-pressed="true"] {
+    border-color: var(--text);
+    background: var(--raised);
+  }
+
+  .schematic text {
+    font-family: var(--font-mono);
+  }
+
+  /* --k is the colour of the node's kind */
+  .n {
+    --k: var(--line-strong);
+  }
+
+  .n.io {
+    --k: var(--amber);
+  }
+
+  .n.gate {
+    --k: var(--accent);
+  }
+
+  .n.model {
+    --k: var(--teal);
+  }
+
+  .n > rect:first-child {
+    fill: color-mix(in srgb, var(--k) var(--tint), var(--bg));
+    stroke: var(--k);
+    stroke-width: 1.25;
+    transition: fill 240ms var(--ease), stroke-width 240ms var(--ease);
+  }
+
+  .n.io > rect:first-child {
+    stroke-dasharray: 4 3;
+  }
+
+  .n .d {
+    fill: var(--k);
+    stroke: none;
+  }
+
+  .n .t {
+    font-size: 15px;
+    fill: var(--text);
+  }
+
+  .n .s {
+    font-size: 13px;
+    fill: var(--muted);
+  }
+
+  /* States set by the demo script */
+  .n[data-state="on"] > rect:first-child {
+    fill: color-mix(in srgb, var(--k) 34%, var(--bg));
+    stroke-width: 2.5;
+  }
+
+  .n[data-state="done"] > rect:first-child {
+    fill: color-mix(in srgb, var(--k) 22%, var(--bg));
+    stroke-width: 1.75;
+  }
+
+  .n[data-state="fail"] > rect:first-child {
+    fill: color-mix(in srgb, var(--accent) 30%, var(--bg));
+    stroke: var(--accent);
+    stroke-width: 2.5;
+    stroke-dasharray: none;
+  }
+
+  .links-layer line,
+  .links-layer path {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .branch path {
+    stroke: var(--line-strong);
+    stroke-width: 1.25;
+    transition: stroke 240ms var(--ease);
+  }
+
+  .branch text {
+    font-size: 13px;
+    fill: var(--muted);
+    transition: fill 240ms var(--ease);
+  }
+
+  .branch[data-state="on"] path {
+    stroke: var(--accent);
+    stroke-width: 2.25;
+  }
+
+  .branch[data-state="on"] text {
+    fill: var(--accent);
+  }
+
+  /* The one entrance on the page: the schematic assembles top to bottom. */
+  @media (prefers-reduced-motion: no-preference) {
+    .n {
+      animation: settle 420ms var(--ease) both;
+      animation-delay: calc(var(--i) * 60ms + 80ms);
+    }
+
+    .links-layer {
+      animation: settle 420ms var(--ease) both;
+      animation-delay: 400ms;
+    }
+
+    @keyframes settle {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+    }
+  }
+
+  /* Legend for the diagrams */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-6);
+    margin-top: var(--s-2);
+    font-size: var(--step-small);
+    color: var(--text-2);
+  }
+
+  .legend li {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+
+  .key {
+    flex: none;
+    width: 0.625rem;
+    height: 0.625rem;
+  }
+
+  .key-io {
+    width: 1rem;
+    border: 1px dashed var(--amber);
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--amber) var(--tint), var(--bg));
+  }
+
+  .key-model {
+    border-radius: 50%;
+    background: var(--teal);
+  }
+
+  .key-gate {
+    background: var(--accent);
+    transform: rotate(45deg) scale(0.85);
+  }
+
+  /* Work */
+  .works {
+    display: grid;
+    gap: var(--s-12);
+  }
+
+  .work {
+    display: grid;
+    gap: var(--s-5);
+  }
+
+  .work-head {
+    display: grid;
+    gap: var(--s-4);
+  }
+
+  .work-title {
+    display: grid;
+    gap: var(--s-2);
+    max-width: var(--measure);
+  }
+
+  .work-title h3 a {
+    text-decoration-color: transparent;
+  }
+
+  .work-title h3 a:hover {
+    text-decoration-color: currentColor;
+  }
+
+  .work-title p {
+    color: var(--text-2);
+  }
+
+  .work-meta {
+    display: grid;
+    gap: var(--s-2);
+    align-content: start;
+  }
+
+  .more {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-size: var(--step-small);
+    font-weight: 500;
+  }
+
+  .also {
+    max-width: var(--measure);
+    margin-top: var(--s-16);
+    padding-top: var(--s-6);
+    border-top: 1px solid var(--line);
+    font-size: var(--step-small);
+    color: var(--text-2);
+  }
+
+  /* Principles: four habits on the inverted band, each with a small glyph
+     drawn in the same language as the diagrams */
+  .principles {
+    display: grid;
+    gap: var(--s-10);
+    margin: 0;
+  }
+
+  .principles > div {
+    display: grid;
+    gap: var(--s-3);
+    align-content: start;
+    padding-top: var(--s-6);
+    border-top: 1px solid var(--line);
+  }
+
+  .glyph {
+    width: 6rem;
+    height: auto;
+    margin-bottom: var(--s-2);
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .g-n {
+    stroke: var(--muted);
+  }
+
+  .g-a {
+    stroke: var(--accent);
+  }
+
+  .g-t {
+    stroke: var(--teal);
+  }
+
+  .g-m {
+    stroke: var(--amber);
+  }
+
+  .principles dt {
+    font-size: var(--step-h3);
+    font-weight: 500;
+    font-stretch: 84%;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .principles dd {
+    display: grid;
+    gap: var(--s-3);
+    max-width: 30rem;
+    color: var(--text-2);
+  }
+
+  .principles dd a {
+    justify-self: start;
+    font-size: var(--step-small);
+    color: var(--text);
+  }
+
+  /* Skills: a spec sheet, six blocks */
+  .skills {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: var(--s-8) var(--s-10);
+    margin: 0;
+  }
+
+  .skills > div {
+    display: grid;
+    gap: var(--s-2);
+    align-content: start;
+  }
+
+  .skills dt {
+    font-weight: 500;
+  }
+
+  .skills dd {
+    font-size: var(--step-small);
+    line-height: 1.6;
+    color: var(--text-2);
+  }
+
+  /* Experience, education, certification: three labelled groups */
+  .record {
+    display: grid;
+    gap: var(--s-12);
+  }
+
+  .group {
+    display: grid;
+    gap: var(--s-4);
+  }
+
+  .group-label {
+    font-size: var(--step-small);
+    font-stretch: 100%;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+
+  .group ol {
+    display: grid;
+    gap: var(--s-8);
+  }
+
+  .entry-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0 var(--s-6);
+  }
+
+  .entry-head h4 {
+    margin: 0;
+    font-size: var(--step-lead);
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  .when {
+    font-size: var(--step-small);
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .place {
+    color: var(--text-2);
+  }
+
+  .detail {
+    max-width: var(--measure);
+    margin-top: var(--s-2);
+    font-size: var(--step-small);
+    color: var(--text-2);
+  }
+
+  /* Writing */
+  .repo {
+    display: grid;
+    gap: var(--s-2);
+    max-width: var(--measure);
+  }
+
+  .repo h3 {
+    font-family: var(--font-mono);
+    font-size: 1.0625rem;
+    font-stretch: 100%;
+    font-weight: 400;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .repo p {
+    color: var(--text-2);
+  }
+
+  /* Contact */
+  .email {
+    display: inline-block;
+    font-size: clamp(1.25rem, 0.8rem + 2.4vw, 2.25rem);
+    font-weight: 500;
+    font-stretch: 84%;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.25em;
+  }
+
+  .contact-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--s-6);
+    margin-top: var(--s-5);
+  }
+
+  .contact-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+
+  .outside {
+    max-width: var(--measure);
+    margin-top: var(--s-10);
+    font-size: var(--step-small);
+    color: var(--text-2);
+  }
+
+  @media (min-width: 48rem) {
+    .principles {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--s-12) var(--s-16);
+    }
+
+    .group {
+      grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
+      gap: var(--s-10);
+      padding-top: var(--s-6);
+      border-top: 1px solid var(--line);
+    }
+
+    .works {
+      gap: var(--s-16);
+    }
+
+    .work-head {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
+      gap: var(--s-10);
+      align-items: end;
+    }
+  }
+
+  @media (min-width: 60rem) {
+    .hero {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 28rem);
+      gap: var(--s-16);
+      align-items: center;
+      min-height: min(calc(100svh - 3.5rem), 42rem);
+      padding-block: var(--s-12);
+    }
+
+    .schematic {
+      justify-self: end;
+    }
+  }
+</style>

@@ -1,0 +1,297 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: var(--s-20);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--step-body);
+  line-height: 1.6;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+dl,
+dd,
+figure {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--heading);
+  font-weight: 500;
+  font-stretch: 84%;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--step-hero);
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+}
+
+h2 {
+  font-size: var(--step-h2);
+  letter-spacing: -0.02em;
+}
+
+h3 {
+  font-size: var(--step-h3);
+  letter-spacing: -0.01em;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+a {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  transition: text-decoration-color var(--fast) var(--ease), color var(--fast) var(--ease);
+}
+
+a:hover {
+  text-decoration-color: currentColor;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+svg {
+  display: block;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* Layout helpers */
+
+.wrap {
+  width: 100%;
+  max-width: calc(var(--max) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.section {
+  padding-block: var(--s-16);
+}
+
+@media (min-width: 48rem) {
+  .section {
+    padding-block: var(--s-24);
+  }
+}
+
+.section-head {
+  display: grid;
+  gap: var(--s-3);
+  max-width: var(--measure);
+  margin-bottom: var(--s-10);
+}
+
+.section-head p {
+  color: var(--text-2);
+}
+
+.rule {
+  border-top: 1px solid var(--line);
+}
+
+/* Section grounds. "band" is a tinted sheet with drafting dots; "sheet" is
+   the lighter panel colour. They break up the page ground. */
+.band {
+  background-color: var(--band);
+  background-image: radial-gradient(var(--dot) 1px, transparent 1.5px);
+  background-size: 16px 16px;
+}
+
+.sheet {
+  background-color: var(--surface);
+}
+
+.lead {
+  font-size: var(--step-lead);
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.meta {
+  font-size: var(--step-meta);
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--step-meta);
+  letter-spacing: 0;
+}
+
+/* Buttons */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 2.75rem;
+  padding: 0 var(--s-5);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--step-small);
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--fast) var(--ease), border-color var(--fast) var(--ease),
+    transform var(--fast) var(--ease);
+}
+
+.btn:hover {
+  background: var(--raised);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--heading);
+  border-color: var(--heading);
+  color: var(--bg);
+}
+
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--heading) 84%, var(--bg));
+  border-color: color-mix(in srgb, var(--heading) 84%, var(--bg));
+}
+
+.btn svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}
+
+/* Stack list: plain technical labels */
+
+.stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-4);
+  font-family: var(--font-mono);
+  font-size: var(--step-meta);
+  color: var(--muted);
+}
+
+.skip {
+  position: absolute;
+  left: var(--s-4);
+  top: var(--s-4);
+  z-index: 20;
+  padding: var(--s-3) var(--s-4);
+  background: var(--text);
+  color: var(--bg);
+  border-radius: var(--r-sm);
+  transform: translateY(-200%);
+}
+
+.skip:focus {
+  transform: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Prose in case studies */
+
+.prose {
+  max-width: var(--measure);
+}
+
+.prose > * + * {
+  margin-top: var(--s-5);
+}
+
+.prose h2 {
+  font-size: var(--step-h3);
+  margin-top: var(--s-16);
+}
+
+.prose h2:first-child {
+  margin-top: 0;
+}
+
+.prose ul {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.prose li {
+  position: relative;
+  padding-left: var(--s-6);
+}
+
+.prose li::before {
+  content: "";
+  position: absolute;
+  left: 0.125rem;
+  top: 0.62em;
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 1.5px solid var(--muted);
+  transform: rotate(45deg);
+}
+
+.prose strong {
+  font-weight: 600;
+}

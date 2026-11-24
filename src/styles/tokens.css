@@ -1,0 +1,136 @@
+/*
+  Design tokens. Direction: exact, calm, a little warm.
+
+  Dark is the default theme (Dhanashri's choice, 24 Nov 2026). The light theme
+  is opt-in through the header toggle and is stored in localStorage.
+
+  Three powder colours, each with one meaning in the diagrams: rani pink
+  (--accent) for guardrails and checks, peacock teal (--teal) for model steps,
+  turmeric (--amber) for inputs and outputs. Outside diagrams only the accent
+  is used, and rarely.
+
+  Never hard-code colours, fonts or spacing in components.
+*/
+
+:root {
+  color-scheme: dark;
+
+  /* Dark theme (default): green-black ink */
+  --bg: #111614;
+  --band: #0d1210;
+  --surface: #171d1a;
+  --raised: #212a26;
+  --text: #e9eeea;
+  --text-2: #aab5af;
+  --muted: #8d9992;
+  --heading: #f1f5f2;
+  --line: rgb(233 238 234 / 0.14);
+  --line-strong: rgb(233 238 234 / 0.34);
+  --dot: rgb(233 238 234 / 0.14);
+
+  --accent: #f28aab;
+  --accent-soft: rgb(242 138 171 / 0.1);
+  --on-accent: #1a0b11;
+  --teal: #5cc8be;
+  --amber: #e9b45a;
+  /* How strongly a diagram step is tinted with its kind colour */
+  --tint: 8%;
+
+  /* Type */
+  --font-body: "Instrument Sans Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --step-hero: clamp(2.75rem, 1.6rem + 5.6vw, 5rem);
+  --step-h2: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
+  --step-h3: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
+  --step-lead: clamp(1.125rem, 1.05rem + 0.4vw, 1.3125rem);
+  --step-body: 1.0625rem;
+  --step-small: 0.9375rem;
+  --step-meta: 0.8125rem;
+
+  /* Spacing, 4px grid */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.25rem;
+  --s-6: 1.5rem;
+  --s-8: 2rem;
+  --s-10: 2.5rem;
+  --s-12: 3rem;
+  --s-16: 4rem;
+  --s-20: 5rem;
+  --s-24: 6rem;
+
+  --gutter: clamp(1rem, 4vw, 2.5rem);
+  --max: 70rem;
+  --measure: 40rem;
+
+  /* Radius */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --fast: 150ms;
+}
+
+/*
+  Light theme: the dark theme's black-and-pink pairing, turned over. Blush
+  paper with pink drafting dots, black ink for text, headings and primary
+  buttons, rani pink as the accent. No green anywhere in the neutrals
+  (Dhanashri's call, 24 Nov 2026).
+*/
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f9f1f3;
+  --band: #f3e1e7;
+  --surface: #fffbfc;
+  --raised: #eedbe1;
+  --text: #1c1519;
+  --text-2: #493c42;
+  --muted: #68585f;
+  --heading: #150f12;
+  --line: rgb(40 16 26 / 0.15);
+  --line-strong: rgb(40 16 26 / 0.38);
+  --dot: rgb(176 30 82 / 0.24);
+
+  --accent: #b01e52;
+  --accent-soft: rgb(176 30 82 / 0.1);
+  --on-accent: #ffffff;
+  --teal: #0c5c74;
+  --amber: #8a4f05;
+  --tint: 12%;
+}
+
+/*
+  An inverted band, used for one section per page so the page has a change of
+  register: a raised surface in the dark theme, black in the light theme.
+*/
+.invert {
+  --bg: #1b2420;
+  --surface: #222c28;
+  --raised: #2b3732;
+  background: var(--bg);
+  color: var(--text);
+}
+
+:root[data-theme="light"] .invert {
+  --bg: #151012;
+  --surface: #1e171a;
+  --raised: #2b2226;
+  --text: #f5edf0;
+  --text-2: #cbbec3;
+  --muted: #a5979d;
+  --heading: #ffffff;
+  --line: rgb(245 237 240 / 0.16);
+  --line-strong: rgb(245 237 240 / 0.38);
+  --dot: rgb(245 143 176 / 0.2);
+  --accent: #f58fb0;
+  --accent-soft: rgb(245 143 176 / 0.14);
+  --on-accent: #1a0b11;
+  --teal: #6fcfd6;
+  --amber: #efbf6b;
+  --tint: 10%;
+}
